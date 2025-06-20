@@ -1,0 +1,43 @@
+- name: Bootstrap K3s + Flux on homelab server
+  hosts: homelab
+  become: true
+
+  vars:
+    flux_git_url: "https://github.com/mattsunner/homelab.git"
+    flux_git_branch: "main"
+    flux_path: "flux/clusters/k3s"
+
+  tasks:
+    - name: Install K3s
+      shell: |
+        curl -sfL https://get.k3s.io | sh -
+      args:
+        creates: /usr/local/bin/k3s
+
+    - name: Install flux CLI
+      shell: |
+        curl -s https://fluxcd.io/install.sh | sudo bash
+      args:
+        creates: /usr/local/bin/flux
+
+    - name: Ensure root has kubeconfig
+      copy:
+        src: /etc/rancher/k3s/k3s.yaml
+        dest: /root/.kube/config
+        remote_src: yes
+        owner: root
+        group: root
+        mode: '0600'
+
+    - name: Bootstrap Flux with Git
+      shell: |
+        flux bootstrap github \
+          --owner=mattsunner \
+          --repository=homelab \
+          --branch=main \
+          --path=flux/clusters/k3s \
+          --token-auth
+      environment:
+        GITHUB_TOKEN: "{{ lookup('env', 'GITHUB_TOKEN') }}"
+      args:
+        creates: /etc/flux_bootstrapped
