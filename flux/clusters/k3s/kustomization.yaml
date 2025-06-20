@@ -11,10 +11,7 @@ spec:
     kind: GitRepository
     name: homelab
     namespace: flux-system
-  components:
-    - ./flux/secrets/k3s  
   dependsOn:
     - name: flux-system
   timeout: 2m
   wait: true
- Future encrypted secrets
