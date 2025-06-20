@@ -1,0 +1,15 @@
+# Keys
+*.agekey
+*.gpg
+age-key.txt
+
+
+# Environment Files
+.DS_Store
+*.env
+
+
+# Python
+*.pyc
+__pycache__/
+venv/
