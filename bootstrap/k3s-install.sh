@@ -1,52 +1,67 @@
 #!/bin/bash
 set -e
 
-echo "=== Installing K3s ==="
+echo "=== Homelab K3s Bootstrap ==="
 
+# Install K3s
+echo "Installing K3s..."
 curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server \
   --disable traefik \
   --disable servicelb \
   --write-kubeconfig-mode 644 \
   --cluster-init" sh -
 
-echo "✓ K3s service started"
+# Wait for K3s service to be active
+echo "Waiting for K3s service..."
+until systemctl is-active --quiet k3s; do
+  sleep 2
+done
+echo "✓ K3s service is active"
 
-# Set KUBECONFIG for this script
+# Export kubeconfig for this script
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 
-echo "Waiting for K3s to be ready..."
-
-# Wait for node with proper config
+# Wait for node to be ready
+echo "Waiting for node to be Ready..."
 counter=0
 until kubectl get nodes 2>/dev/null | grep -q " Ready"; do
-  echo "Waiting... (${counter}s)"
+  printf "."
   sleep 5
   counter=$((counter + 5))
   
   if [ $counter -gt 120 ]; then
-    echo "ERROR: K3s not ready after 2 minutes"
-    echo "Checking service status:"
-    systemctl status k3s --no-pager
     echo ""
-    echo "Last 20 log lines:"
-    journalctl -u k3s -n 20 --no-pager
+    echo "ERROR: Timeout waiting for node"
+    sudo k3s kubectl get nodes
+    journalctl -u k3s -n 30 --no-pager
     exit 1
   fi
 done
 
+echo ""
 echo "✓ K3s cluster is ready!"
 kubectl get nodes
 
-# Set up kubectl for the user who ran sudo
+# Configure kubectl for non-root user
 if [ -n "$SUDO_USER" ]; then
+  USER_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
   echo ""
-  echo "Setting up kubectl for user $SUDO_USER..."
-  SUDO_HOME=$(eval echo ~$SUDO_USER)
-  mkdir -p "$SUDO_HOME/.kube"
-  cp /etc/rancher/k3s/k3s.yaml "$SUDO_HOME/.kube/config"
-  chown -R $SUDO_USER:$SUDO_USER "$SUDO_HOME/.kube"
-  chmod 600 "$SUDO_HOME/.kube/config"
-  echo "✓ kubectl configured for $SUDO_USER"
+  echo "Configuring kubectl for $SUDO_USER..."
+  mkdir -p "$USER_HOME/.kube"
+  cp /etc/rancher/k3s/k3s.yaml "$USER_HOME/.kube/config"
+  chown -R "$SUDO_USER:$SUDO_USER" "$USER_HOME/.kube"
+  chmod 600 "$USER_HOME/.kube/config"
+  echo "✓ Done!"
   echo ""
-  echo "You can now run: kubectl get nodes"
+  echo "Run as $SUDO_USER: kubectl get nodes"
+else
+  echo ""
+  echo "To use kubectl, run:"
+  echo "  mkdir -p ~/.kube"
+  echo "  sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config"
+  echo "  sudo chown \$USER:\$USER ~/.kube/config"
 fi
+
+echo ""
+echo "=== Bootstrap Complete ==="
+
