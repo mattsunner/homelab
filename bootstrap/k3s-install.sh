@@ -8,8 +8,7 @@ echo "Installing K3s..."
 curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server \
   --disable traefik \
   --disable servicelb \
-  --write-kubeconfig-mode 644 \
-  --cluster-init" sh -
+  --write-kubeconfig-mode 644" sh - 
 
 # Wait for K3s service to be active
 echo "Waiting for K3s service..."
