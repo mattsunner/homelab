@@ -7,7 +7,7 @@ echo "Installing K3s..."
 ./bootstrap/k3s-install.sh
 
 echo "Installing ArgoCD..."
-./bootstrap/argocd-install.yaml
+./bootstrap/argocd-install.sh
 
 echo "Deploying root ArgoCD application..."
 kubectl apply -f infrastructure/argocd/root-app.yaml
