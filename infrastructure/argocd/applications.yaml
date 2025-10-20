@@ -64,7 +64,7 @@ metadata:
 spec:
   project: infrastructure
   source:
-    repoURL: https://github.com/mattsuner/homelab.git
+    repoURL: https://github.com/mattsunner/homelab.git
     targetRevision: main
     path: infrastructure/nginx-ingress
   destination:
