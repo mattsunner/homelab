@@ -2,22 +2,17 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: cert-manager
-  annotations:
-    argocd.argoproj.io/sync-wave: "0"
 ---
-apiVersion: helm.cattle.io/v1
-kind: HelmChart
+# Install cert-manager using official manifest
+# This uses a remote manifest URL that ArgoCD will fetch and apply
+apiVersion: v1
+kind: ConfigMap
 metadata:
-  name: cert-manager
-  namespace: kube-system
+  name: cert-manager-install
+  namespace: cert-manager
   annotations:
-    argocd.argoproj.io/sync-wave: "0"
-spec:
-  chart: cert-manager
-  repo: https://charts.jetstack.io
-  targetNamespace: cert-manager
-  valuesContent: |-
-    installCRDs: true
-    global:
-      leaderElection:
-        namespace: cert-manager
+    argocd.argoproj.io/sync-options: Replace=true
+data:
+  install.sh: |
+    #!/bin/bash
+    kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.2/cert-manager.yaml
