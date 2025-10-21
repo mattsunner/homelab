@@ -1,81 +1,81 @@
 apiVersion: v1
-  kind: Namespace
-  metadata:
-    name: heimdall
-  ---
-  apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: heimdall
-    namespace: heimdall
-  spec:
-    replicas: 1
-    selector:
-      matchLabels:
-        app: heimdall
-    template:
-      metadata:
-        labels:
-          app: heimdall
-      spec:
-        containers:
-        - name: heimdall
-          image: lscr.io/linuxserver/heimdall:latest
-          ports:
-          - containerPort: 80
-          - containerPort: 443
-          env:
-          - name: PUID
-            value: "1000"
-          - name: PGID
-            value: "1000"
-          - name: TZ
-            value: "America/New_York"
-          volumeMounts:
-          - name: config
-            mountPath: /config
-        volumes:
-        - name: config
-          emptyDir: {}
-  ---
-  apiVersion: v1
-  kind: Service
-  metadata:
-    name: heimdall
-    namespace: heimdall
-  spec:
-    selector:
+kind: Namespace
+metadata:
+  name: heimdall
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: heimdall
+  namespace: heimdall
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
       app: heimdall
-    ports:
-    - name: http
-      port: 80
-      targetPort: 80
-    - name: https
-      port: 443
-      targetPort: 443
-    type: ClusterIP
-  ---
-  apiVersion: networking.k8s.io/v1
-  kind: Ingress
-  metadata:
-    name: heimdall
-    namespace: heimdall
-    annotations:
-      cert-manager.io/cluster-issuer: "letsencrypt-prod"
-  spec:
-    ingressClassName: nginx
-    tls:
-    - hosts:
-      - home.mattsunner.com
-      secretName: heimdall-tls
-    rules:
-    - host: home.mattsunner.com
-      http:
-        paths:
-        - path: /
-          pathType: Prefix
-          backend:
-            service:
-              name: heimdall
-              port:
-                number: 80
+  template:
+    metadata:
+      labels:
+        app: heimdall
+    spec:
+      containers:
+      - name: heimdall
+        image: lscr.io/linuxserver/heimdall:latest
+        ports:
+        - containerPort: 80
+        - containerPort: 443
+        env:
+        - name: PUID
+          value: "1000"
+        - name: PGID
+          value: "1000"
+        - name: TZ
+          value: "America/New_York"
+        volumeMounts:
+        - name: config
+          mountPath: /config
+      volumes:
+      - name: config
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: heimdall
+  namespace: heimdall
+spec:
+  selector:
+    app: heimdall
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+  - name: https
+    port: 443
+    targetPort: 443
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: heimdall
+  namespace: heimdall
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - home.mattsunner.com
+    secretName: heimdall-tls
+  rules:
+  - host: home.mattsunner.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: heimdall
+            port:
+              number: 80
