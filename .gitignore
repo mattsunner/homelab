@@ -1,2 +1,4 @@
 kubeconfig
 architecture.md
+*secret*.yaml
+*token*.yaml
