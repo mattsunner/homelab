@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-prometheus-stack
+  namespace: argocd
+spec:
+  project: infrastructure
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  source:
+    chart: kube-prometheus-stack
+    repoURL: https://prometheus-community.github.io/helm-charts
+    targetRevision: 55.5.0
+    helm:
+      values: |
+        grafana:
+          ingress:
+            enabled: true
+            ingressClassName: nginx
+            hosts:
+              - grafana.mattsunner.com
+            tls:
+              - secretName: grafana-tls
+                hosts:
+                  - grafana.mattsunner.com
+            annotations:
+              cert-manager.io/cluster-issuer: "letsencrypt-prod"
+          
+          # Admin credentials
+          adminUser: admin
+          adminPassword: ""  # Auto-generated, retrieve with: kubectl get secret -n monitoring kube-prometheus-stack-grafana -o jsonpath="{.data.admin-password}" | base64 --decode
+        
+        prometheus:
+          ingress:
+            enabled: true
+            ingressClassName: nginx
+            hosts:
+              - prometheus.mattsunner.com
+            paths:
+              - /
+            pathType: Prefix
+            tls:
+              - secretName: prometheus-tls
+                hosts:
+                  - prometheus.mattsunner.com
+            annotations:
+              cert-manager.io/cluster-issuer: "letsencrypt-prod"
+        
+        alertmanager:
+          ingress:
+            enabled: true
+            ingressClassName: nginx
+            hosts:
+              - alertmanager.mattsunner.com
+            paths:
+              - /
+            pathType: Prefix
+            tls:
+              - secretName: alertmanager-tls
+                hosts:
+                  - alertmanager.mattsunner.com
+            annotations:
+              cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
