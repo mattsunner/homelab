@@ -183,6 +183,9 @@ spec:
           tlsSecret: longhorn-tls
           annotations:
             cert-manager.io/cluster-issuer: "letsencrypt-prod"
+
+        preUpgradeChecker:
+          jobEnabled: false
   syncPolicy:
     automated:
       prune: true
@@ -190,6 +193,7 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
