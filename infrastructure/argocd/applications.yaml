@@ -141,63 +141,6 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: longhorn
-  namespace: argocd
-spec:
-  project: infrastructure
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: longhorn-system
-  source:
-    chart: longhorn
-    repoURL: https://charts.longhorn.io
-    targetRevision: 1.7.x
-    helm:
-      values: |
-        defaultSettings:
-          backupTarget: ""
-          backupTargetCredentialSecret: ""
-          createDefaultDiskLabeledNodes: true
-          defaultDataPath: /var/lib/longhorn
-          defaultDataLocality: best-effort
-          replicaSoftAntiAffinity: false
-          replicaAutoBalance: best-effort
-          storageOverProvisioningPercentage: 200
-          storageMinimalAvailablePercentage: 25
-          upgradeChecker: true
-          defaultReplicaCount: 1
-          guaranteedEngineManagerCPU: 12
-          guaranteedReplicaManagerCPU: 12
-
-        persistence:
-          defaultClass: true
-          defaultFsType: ext4
-          defaultClassReplicaCount: 1
-          reclaimPolicy: Retain
-
-        ingress:
-          enabled: true
-          ingressClassName: nginx
-          host: longhorn.mattsunner.com
-          tls: true
-          tlsSecret: longhorn-tls
-          annotations:
-            cert-manager.io/cluster-issuer: "letsencrypt-prod"
-
-        preUpgradeChecker:
-          jobEnabled: false
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
-      - SkipDryRunOnMissingResource=true
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
   name: postgresql
   namespace: argocd
 spec:
