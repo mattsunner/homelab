@@ -35,6 +35,10 @@ spec:
       labels:
         app: pgadmin
     spec:
+      securityContext:
+        fsGroup: 5050
+        runAsUser: 5050
+        runAsGroup: 5050
       containers:
       - name: pgadmin
         image: dpage/pgadmin4:latest
