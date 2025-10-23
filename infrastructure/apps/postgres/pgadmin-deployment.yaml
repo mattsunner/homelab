@@ -55,7 +55,7 @@ spec:
         - name: PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION
           value: "True"
         - name: PGADMIN_CONFIG_LOGIN_BANNER
-          value: "Homelab PostgreSQL Administration"
+          value: "'Homelab PostgreSQL Administration'"
         - name: PGADMIN_CONFIG_CONSOLE_LOG_LEVEL
           value: "10"
         volumeMounts:
