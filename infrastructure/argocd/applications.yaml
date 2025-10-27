@@ -177,3 +177,24 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: webtop
+  namespace: argocd
+spec:
+  project: infrastructure
+  source:
+    repoURL: https://github.com/mattsunner/homelab.git
+    targetRevision: main
+    path: infrastructure/apps/webtop
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: webtop
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -1,0 +1,117 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: webtop
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: webtop-config
+  namespace: webtop
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 50Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webtop
+  namespace: webtop
+  labels:
+    app: webtop
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: webtop
+  template:
+    metadata:
+      labels:
+        app: webtop
+    spec:
+      containers:
+      - name: webtop
+        image: lscr.io/linuxserver/webtop:ubuntu-xfce
+        ports:
+        - name: http
+          containerPort: 3000
+          protocol: TCP
+        env:
+        - name: PUID
+          value: "1000"
+        - name: PGID
+          value: "1000"
+        - name: TZ
+          value: "America/Chicago"
+        - name: SUBFOLDER
+          value: "/"
+        - name: TITLE
+          value: "Webtop"
+        volumeMounts:
+        - name: config
+          mountPath: /config
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        securityContext:
+          privileged: false
+      volumes:
+      - name: config
+        persistentVolumeClaim:
+          claimName: webtop-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webtop
+  namespace: webtop
+  labels:
+    app: webtop
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 3000
+    protocol: TCP
+    name: http
+  selector:
+    app: webtop
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: webtop
+  namespace: webtop
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "3600"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - desktop.mattsunner.com
+    secretName: webtop-tls
+  rules:
+  - host: desktop.mattsunner.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: webtop
+            port:
+              number: 80
