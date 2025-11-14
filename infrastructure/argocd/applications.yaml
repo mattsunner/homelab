@@ -198,3 +198,24 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: opencost
+  namespace: argocd
+spec:
+  project: infrastructure
+  source:
+    repoURL: https://github.com/mattsunner/homelab.git
+    targetRevision: main
+    path: infrastructure/apps/opencost
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: opencost
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
